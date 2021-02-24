@@ -1,0 +1,27 @@
+﻿<script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+<script type="text/javascript">
+    $(document).ready(
+    function () {
+        google.charts.load('current', { 'packages': ['corechart'] });
+        google.charts.setOnLoadCallback(drawChart);
+
+    function drawChart() {
+        var data = new google.visualization.DataTable();
+        data.addColumn('string', 'Название');
+        data.addColumn('number', 'Количество');
+        $.get('@Url.Action("GetChartData", "Product")', null,
+    function (dataJSON, textStatus, jqXHR) {
+        data.addRows(dataJSON);
+        var options = {
+        'title': 'Статистика продажи продуктов',
+        'width': 900,
+        'height': 500,
+         is3D: true
+        };
+
+        var chart = new google.visualization.PieChart(document.getElementById('chartDiv'));
+        chart.draw(data, options);
+        });
+    }
+});
+</script>

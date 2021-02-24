@@ -1,0 +1,44 @@
+﻿@model IPagedList<OrderViewModel>
+@using PagedList;
+@using Task5.Web.Models;
+@using PagedList.Mvc;
+
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+<table class="table">
+    <tr>
+        <th>
+            Дата
+        </th>
+        <th>
+            Клиент
+        </th>
+        <th>
+            Продукт
+        </th>
+        <th>
+            Цена
+        </th>
+    </tr>
+    @foreach (var item in Model)
+    {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Date)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ClientName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ProductName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Price)
+            </td>
+        </tr>
+    }
+</table>
+@Html.PagedListPager(Model, page => Url.Action("ProductSales", new { page, id = ViewBag.ProductId }), PagedListRenderOptions.EnableUnobtrusiveAjaxReplacing(new AjaxOptions() { UpdateTargetId = "salesTable" }))
+
+
+
+

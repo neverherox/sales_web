@@ -1,0 +1,66 @@
+﻿@model ClientFilter
+@using Task5.Web.Models.Filters;
+
+<div>
+    @using (Ajax.BeginForm("Clients", new AjaxOptions { UpdateTargetId = "clientsTable" }))
+    {
+@Html.AntiForgeryToken()
+                <table class="table">
+                    <tr>
+                        <td>
+                            <div class="editor-label">
+                                @Html.LabelFor(model => model.Name)
+                            </div>
+                            <div class="editor-field">
+                                @Html.EditorFor(model => model.Name)
+                            </div>
+                            <div id="filter-radio-button">
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Contains checked>
+                                <span>Содержит</span><br>
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Starts>
+                                <span>Начинается</span><br>
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Ends>
+                                <span>Заканчивается</span><br>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="submit" value="Поиск" />
+                            <input type="button" id="clear" value="Сброс" />
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                </table>}
+    <div id="clientsTable">
+    </div>
+
+    <div id="chartDiv">
+        @Html.Partial("ClientChart")
+    </div>
+</div>
+
+<script>
+    $(document).ready(function () {
+        getClients();
+    });
+
+     $("#clear").on("click", function () {
+         $('#Name').val('');
+         getClients();
+     });
+
+    function getClients() {
+             jQuery.ajax(
+             {
+                    url: "@Url.Action("Clients", "Client")",
+                    type: "GET",
+                    data: { page:@ViewBag.CurrentPage},
+                    success: function (data, textStatus, XHR) {
+                    jQuery("#clientsTable").html(data);
+                 },
+                 dataType: "html"
+             });
+    }
+</script>

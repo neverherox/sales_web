@@ -1,0 +1,74 @@
+﻿@model ProductFilter
+@using Task5.Web.Models.Filters;
+
+<div>
+    @using (Ajax.BeginForm("Products", new AjaxOptions { UpdateTargetId = "productsTable" }))
+    {
+@Html.AntiForgeryToken()
+                <table class="table">
+                    <tr>
+                        <td>
+                            <div class="editor-label">
+                                @Html.LabelFor(model => model.Name)
+                            </div>
+                            <div class="editor-field">
+                                @Html.EditorFor(model => model.Name)
+                            </div>
+                            <div class="editor-label">
+                                @Html.LabelFor(model => model.Price)
+                            </div>
+                            <div class="editor-field">
+                                @Html.EditorFor(model => model.Price)
+                            </div>
+                            <div id="filter-radio-button">
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Contains checked>
+                                <span>Содержит</span><br>
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Starts>
+                                <span>Начинается</span><br>
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Ends>
+                                <span>Заканчивается</span><br>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="submit" value="Поиск" />
+                            <input type="button" id="clear" value="Сброс" />
+                        </td>
+                        <td>
+                        </td>
+                    </tr>
+                </table>}
+    <div id="productsTable">
+    </div>
+
+    <div id="chartDiv">
+        @Html.Partial("ProductChart")
+    </div>
+</div>
+
+
+<script>
+    $(document).ready(function () {
+        getProducts();
+    });
+
+     $("#clear").on("click", function () {
+         $('#Name').val('');
+         $('#Price').val('');
+         getProducts();
+     });
+
+    function getProducts() {
+             jQuery.ajax(
+             {
+                    url: "@Url.Action("Products", "Product")",
+                    type: "GET",
+                    data: { page:@ViewBag.CurrentPage},
+                    success: function (data, textStatus, XHR) {
+                    jQuery("#productsTable").html(data);
+                 },
+                 dataType: "html"
+             });
+    }
+</script>

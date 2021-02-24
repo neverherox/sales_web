@@ -1,0 +1,51 @@
+﻿@model Task5.Web.Models.Product.ProductViewModel
+
+<h3>Подробная информация</h3>
+<div>
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.Name)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Name)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Price)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Price)
+        </dd>
+        <dt>
+            Заказы
+        </dt>
+        <dd>
+            <div id="salesTable">
+            </div>
+        </dd>
+    </dl>
+</div>
+
+<p>
+    @Html.ActionLink("Вернуться назад", "Index", new { page = ViewBag.CurrentPage })
+</p>
+<script>
+    $(document).ready(function () {
+        getProductSales();
+    });
+
+    function getProductSales() {
+             jQuery.ajax(
+             {
+                    url: "@Url.Action("ProductSales", "Product")",
+                    type: "GET",
+                    data: { id:@Model.Id},
+                    success: function (data, textStatus, XHR) {
+                    jQuery("#salesTable").html(data);
+                 },
+                 dataType: "html"
+             });
+    }
+</script>
