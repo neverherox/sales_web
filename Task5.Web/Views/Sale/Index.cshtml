@@ -5,7 +5,6 @@
     @using (Ajax.BeginForm("Sales", new AjaxOptions { UpdateTargetId = "salesTable" }))
     {
         @Html.AntiForgeryToken()
-        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
         <table class="table">
             <tr>
                 <td>
@@ -37,7 +36,6 @@
                     </div>
                     <div class="editor-field">
                         @Html.EditorFor(model => model.Date)
-                        @Html.ValidationMessageFor(model => model.Date, "", new { @class = "text-danger" })
                     </div>
                 </td>
             </tr>

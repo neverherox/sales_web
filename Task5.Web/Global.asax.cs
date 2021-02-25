@@ -27,6 +27,7 @@ namespace Task5.Web
             var kernel = new StandardKernel(webRegistrations, blRegistrations);
             DependencyResolver.SetResolver(new NinjectDependencyResolver(kernel));
             kernel.Unbind<ModelValidatorProvider>();
+            log4net.Config.XmlConfigurator.Configure();
         }
     }
 }

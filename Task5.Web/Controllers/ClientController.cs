@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Ninject.Extensions.Logging;
 using PagedList;
 using System;
 using System.Collections.Generic;
@@ -19,18 +20,21 @@ namespace Task5.Web.Controllers
         private IClientService clientService;
         private IOrderService orderService;
         private IMapper mapper;
-        public ClientController(IClientService clientService, IOrderService orderService)
+        private ILogger logger;
+        public ClientController(IClientService clientService, IOrderService orderService, ILogger logger)
         {
             this.clientService = clientService;
             this.orderService = orderService;
+            this.logger = logger;
             mapper = new Mapper(AutoMapperWebConfig.Configure());
         }
+        [HttpGet]
         public ActionResult Index(int? page)
         {
             ViewBag.CurrentPage = page ?? 1;
             return View();
         }
-
+        [HttpGet]
         public ActionResult Clients(int? page)
         {
             try
@@ -39,8 +43,9 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return PartialView(clients.ToPagedList(page ?? 1, 4));
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -60,11 +65,13 @@ namespace Task5.Web.Controllers
                 }
                 return PartialView(clients.ToPagedList(1, clients.Count() == 0 ? 1 : clients.Count()));
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
+        [HttpGet]
         [Authorize(Roles = "admin")]
         public ActionResult Create(int? page)
         {
@@ -74,8 +81,9 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(createClient);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -94,13 +102,15 @@ namespace Task5.Web.Controllers
                 clientService.Create(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
+        [HttpGet]
         [Authorize(Roles = "admin")]
-        public ActionResult Edit(int id, int? page)
+        public ActionResult Edit(int? id, int? page)
         {
             try
             {
@@ -112,8 +122,9 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(editClient);
             }
-            catch
+            catch(Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -123,7 +134,7 @@ namespace Task5.Web.Controllers
         public ActionResult Edit(EditClientViewModel model, int? page)
         {
             if (!ModelState.IsValid)
-            {          
+            {
                 return View(model);
             }
             try
@@ -133,12 +144,14 @@ namespace Task5.Web.Controllers
                 clientService.Update(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
-        public ActionResult Details(int id, int? page)
+        [HttpGet]
+        public ActionResult Details(int? id, int? page)
         {
             try
             {
@@ -146,29 +159,32 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(client);
             }
-            catch
+            catch(Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
-
-        public ActionResult ClientSales(int id, int? page)
+        [HttpGet]
+        public ActionResult ClientSales(int? id, int? page)
         {
             try
             {
                 var orders = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>
                                        (orderService.GetOrders(x => x.ClientId == id))
-                                       .ToPagedList(page ?? 1, 1);
+                                       .ToPagedList(page ?? 1, 4);
                 ViewBag.ClientId = id;
                 return PartialView(orders);
             }
-            catch
+            catch(Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
+        [HttpGet]
         [Authorize(Roles = "admin")]
-        public ActionResult Delete(int id, int? page, bool? saveChangesError = false)
+        public ActionResult Delete(int? id, int? page, bool? saveChangesError = false)
         {
             try
             {
@@ -176,15 +192,16 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(client);
             }
-            catch
+            catch(Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, int? page)
+        public ActionResult Delete(int? id, int? page)
         {
             try
             {
@@ -192,8 +209,9 @@ namespace Task5.Web.Controllers
                 clientService.Remove(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
-            catch
+            catch(Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -205,6 +223,7 @@ namespace Task5.Web.Controllers
             var result = (client == null);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
+        [HttpGet]
         public JsonResult GetChartData()
         {
             var clients = clientService.GetClients();

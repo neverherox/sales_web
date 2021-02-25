@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Ninject.Extensions.Logging;
 using PagedList;
 using System;
 using System.Collections.Generic;
@@ -21,21 +22,23 @@ namespace Task5.Web.Controllers
         private IOrderService orderService;
         private IClientService clientService;
         private IProductService productService;
+        private ILogger logger;
         private IMapper mapper;
-        public SaleController(IOrderService orderService, IClientService clientService, IProductService productService)
+        public SaleController(IOrderService orderService, IClientService clientService, IProductService productService, ILogger logger)
         {
             this.orderService = orderService;
             this.productService = productService;
             this.clientService = clientService;
+            this.logger = logger;
             mapper = new Mapper(AutoMapperWebConfig.Configure());
         }
-
+        [HttpGet]
         public ActionResult Index(int? page)
         {
             ViewBag.CurrentPage = page ?? 1;
             return View();
         }
-
+        [HttpGet]
         public ActionResult Sales(int? page)
         {
             try
@@ -44,8 +47,9 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return PartialView(sales.ToPagedList(page ?? 1, 4));
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -54,6 +58,10 @@ namespace Task5.Web.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Sales(OrderFilter model)
         {
+            if (!ModelState.IsValid)
+            {
+                return PartialView();
+            }
             try
             {
                 var sales = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>(orderService.GetOrders());
@@ -71,14 +79,15 @@ namespace Task5.Web.Controllers
                 {
                     sales = sales.Where(x => x.Date == model.Date);
                 }
-                return PartialView(sales.ToPagedList(1, sales.Count() == 0? 1 : sales.Count()));
+                return PartialView(sales.ToPagedList(1, sales.Count() == 0 ? 1 : sales.Count()));
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
-
+        [HttpGet]
         [Authorize(Roles = "admin")]
         public ActionResult Create(int? page)
         {
@@ -92,8 +101,9 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(createOrder);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -114,14 +124,15 @@ namespace Task5.Web.Controllers
                 orderService.Create(orderDTO);
                 return RedirectToAction("Index", new { page = page });
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
-
+        [HttpGet]
         [Authorize(Roles = "admin")]
-        public ActionResult Edit(int id, int? page)
+        public ActionResult Edit(int? id, int? page)
         {
             try
             {
@@ -136,8 +147,9 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(editOrder);
             }
-            catch
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -161,14 +173,15 @@ namespace Task5.Web.Controllers
                 orderService.Update(orderDTO);
                 return RedirectToAction("Index", new { page = page });
             }
-            catch(Exception e)
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
-
+        [HttpGet]
         [Authorize(Roles = "admin")]
-        public ActionResult Delete(int id, int? page, bool? saveChangesError = false)
+        public ActionResult Delete(int? id, int? page, bool? saveChangesError = false)
         {
             try
             {
@@ -176,15 +189,16 @@ namespace Task5.Web.Controllers
                 ViewBag.CurrentPage = page;
                 return View(order);
             }
-            catch
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public ActionResult Delete(int id, int? page)
+        public ActionResult Delete(int? id, int? page)
         {
             try
             {
@@ -192,8 +206,9 @@ namespace Task5.Web.Controllers
                 orderService.Remove(orderDTO);
                 return RedirectToAction("Index", new { page = page });
             }
-            catch
+            catch (Exception ex)
             {
+                logger.Warn(ex.Message);
                 return View("Error");
             }
         }
