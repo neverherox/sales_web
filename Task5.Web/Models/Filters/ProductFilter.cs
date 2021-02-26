@@ -8,6 +8,6 @@ namespace Task5.Web.Models.Filters
         public string Name { get; set; }
 
         [Display(Name = "Цена")]
-        public double Price { get; set; }
+        public double? Price { get; set; } 
     }
 }

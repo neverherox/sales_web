@@ -2,9 +2,9 @@
 @using Task5.Web.Models.Filters;
 
 <div>
-    @using (Ajax.BeginForm("Clients", new AjaxOptions { UpdateTargetId = "clientsTable" }))
+    @using (Ajax.BeginForm("ApplyFilter", new AjaxOptions { UpdateTargetId = "clientsTable" }))
     {
-@Html.AntiForgeryToken()
+                @Html.AntiForgeryToken()
                 <table class="table">
                     <tr>
                         <td>
@@ -14,12 +14,18 @@
                             <div class="editor-field">
                                 @Html.EditorFor(model => model.Name)
                             </div>
+                            <div class="editor-label">
+                                @Html.LabelFor(model => model.PhoneNumber)
+                            </div>
+                            <div class="editor-field">
+                                @Html.EditorFor(model => model.PhoneNumber)
+                            </div>
                             <div id="filter-radio-button">
-                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Contains checked>
+                                <input name="NameCriteria" id ="contains" type="radio" value=@TextFieldCriteria.Contains @(Model.NameCriteria == TextFieldCriteria.Contains ? " checked=\"checked\"" : "")>
                                 <span>Содержит</span><br>
-                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Starts>
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Starts @(Model.NameCriteria == TextFieldCriteria.Starts ? " checked=\"checked\"" : "")>
                                 <span>Начинается</span><br>
-                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Ends>
+                                <input name="NameCriteria" type="radio" value=@TextFieldCriteria.Ends @(Model.NameCriteria == TextFieldCriteria.Ends ? " checked=\"checked\"" : "")>
                                 <span>Заканчивается</span><br>
                             </div>
                         </td>
@@ -48,7 +54,9 @@
 
      $("#clear").on("click", function () {
          $('#Name').val('');
-         getClients();
+         $('#PhoneNumber').val('');
+         $("#contains").prop("checked", true);
+         clearFilter();
      });
 
     function getClients() {
@@ -62,5 +70,18 @@
                  },
                  dataType: "html"
              });
+    }
+
+     function clearFilter() {
+        jQuery.ajax(
+            {
+                url: "@Url.Action("ClearFilter", "Client")",
+                type: "GET",
+                success: function (data, textStatus, XHR) {
+                    jQuery("#clientsTable").html(data);
+                },
+                dataType: "html"
+            }
+        );
     }
 </script>

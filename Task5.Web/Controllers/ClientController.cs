@@ -31,8 +31,13 @@ namespace Task5.Web.Controllers
         [HttpGet]
         public ActionResult Index(int? page)
         {
+            ClientFilter filter = (ClientFilter)Session["clientFilter"];
             ViewBag.CurrentPage = page ?? 1;
-            return View();
+            if (filter != null)
+            {
+                return View(filter);
+            }
+            return View(new ClientFilter());
         }
         [HttpGet]
         public ActionResult Clients(int? page)
@@ -40,6 +45,11 @@ namespace Task5.Web.Controllers
             try
             {
                 var clients = mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients());
+                ClientFilter filter = (ClientFilter)Session["clientFilter"];
+                if (filter != null)
+                {
+                    clients = GetFilteredClients(clients, filter);
+                }
                 ViewBag.CurrentPage = page;
                 return PartialView(clients.ToPagedList(page ?? 1, 4));
             }
@@ -51,26 +61,19 @@ namespace Task5.Web.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Clients(ClientFilter model)
+        public ActionResult ApplyFilter(ClientFilter model)
         {
-            try
-            {
-                var clients = mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients());
-                var expression = model.ToExpression();
-                var predicate = expression.Compile();
-                if (model.Name != null)
-                {
-                    clients = clients.Where(x => predicate(x.Name, model.Name));
-                }
-                return PartialView(clients.ToPagedList(1, clients.Count() == 0 ? 1 : clients.Count()));
-            }
-            catch (Exception ex)
-            {
-                logger.Warn(ex.Message);
-                return View("Error");
-            }
+            Session["clientFilter"] = model;
+            return RedirectToAction("Clients");
         }
+
+        [HttpGet]
+        public ActionResult ClearFilter()
+        {
+            Session["clientFilter"] = null;
+            return RedirectToAction("Clients");
+        }
+
         [HttpGet]
         [Authorize(Roles = "admin")]
         public ActionResult Create(int? page)
@@ -117,7 +120,8 @@ namespace Task5.Web.Controllers
                 var clientDTO = clientService.GetClient(x => x.Id == id);
                 var editClient = new EditClientViewModel
                 {
-                    Name = clientDTO.Name
+                    Name = clientDTO.Name,
+                    PhoneNumber = clientDTO.PhoneNumber
                 };
                 ViewBag.CurrentPage = page;
                 return View(editClient);
@@ -141,6 +145,7 @@ namespace Task5.Web.Controllers
             {
                 var clientDTO = clientService.GetClient(x => x.Id == model.Id);
                 clientDTO.Name = model.Name;
+                clientDTO.PhoneNumber = model.PhoneNumber;
                 clientService.Update(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
@@ -224,11 +229,34 @@ namespace Task5.Web.Controllers
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         [HttpGet]
+        public JsonResult CheckClientPhoneNumber(string PhoneNumber)
+        {
+            var client = clientService.GetClient(x => x.PhoneNumber == PhoneNumber);
+            var result = (client == null);
+            return Json(result, JsonRequestBehavior.AllowGet);
+        }
+
+        [HttpGet]
         public JsonResult GetChartData()
         {
             var clients = clientService.GetClients();
             var data = clients.Select(x => new object[] { x.Name, orderService.GetOrders(y => y.ClientId == x.Id).Count() }).ToArray();
             return Json(data.ToArray(), JsonRequestBehavior.AllowGet);
+        }
+
+        private IEnumerable<ClientViewModel> GetFilteredClients(IEnumerable<ClientViewModel> clients, ClientFilter filter)
+        {
+            var expression = filter.ToExpression();
+            var predicate = expression.Compile();
+            if (filter.Name != null)
+            {
+                clients = clients.Where(x => predicate(x.Name, filter.Name));
+            }
+            if (filter.PhoneNumber != null)
+            {
+                clients = clients.Where(x => predicate(x.PhoneNumber, filter.PhoneNumber));
+            }
+            return clients;
         }
         protected override void Dispose(bool disposing)
         {

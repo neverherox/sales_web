@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using DataAnnotationsExtensions;
+using System.ComponentModel.DataAnnotations;
 using System.Web.Mvc;
 
 namespace Task5.Web.Models.Product
@@ -12,6 +13,7 @@ namespace Task5.Web.Models.Product
         public string Name { get; set; }
 
         [Display(Name = "Цена")]
+        [Min(1, ErrorMessage = "Минимальная цена = 1")]
         public double Price { get; set; }
     }
 }

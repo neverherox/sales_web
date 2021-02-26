@@ -5,7 +5,7 @@ namespace Task5.Web.Models.Filters
 {
     public abstract class BaseFilter
     {
-        public TextFieldCriteria NameCriteria { get; set; }
+        public TextFieldCriteria NameCriteria { get; set; } 
         public virtual Expression<Func<string, string, bool>> ToExpression()
         {
             Expression<Func<string, string, bool>> expression = null;

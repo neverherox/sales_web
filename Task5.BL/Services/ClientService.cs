@@ -49,6 +49,7 @@ namespace Task5.BL.Services
         {
             var client = uow.ClientRepository.Get(x => x.Id == clientDTO.Id);
             client.Name = clientDTO.Name;
+            client.PhoneNumber = clientDTO.PhoneNumber;
             uow.ClientRepository.Update(client);
             uow.SaveContext();
         }

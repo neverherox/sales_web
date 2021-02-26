@@ -8,5 +8,8 @@ namespace Task5.Web.Models.Client
 
         [Display(Name = "Имя")]
         public string Name { get; set; }
+
+        [Display(Name = "Номер телефона")]
+        public string PhoneNumber { get; set; }
     }
 }

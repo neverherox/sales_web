@@ -32,18 +32,30 @@ namespace Task5.Web.Controllers
             this.logger = logger;
             mapper = new Mapper(AutoMapperWebConfig.Configure());
         }
+
         [HttpGet]
         public ActionResult Index(int? page)
         {
+            OrderFilter filter = (OrderFilter)Session["orderFilter"];
             ViewBag.CurrentPage = page ?? 1;
-            return View();
+            if (filter != null)
+            {
+                return View(filter);
+            }
+            return View(new OrderFilter());
         }
+
         [HttpGet]
         public ActionResult Sales(int? page)
         {
             try
             {
                 var sales = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>(orderService.GetOrders());
+                OrderFilter filter = (OrderFilter)Session["orderFilter"];
+                if (filter != null)
+                {
+                    sales = GetFilteredSales(sales, filter);
+                }
                 ViewBag.CurrentPage = page;
                 return PartialView(sales.ToPagedList(page ?? 1, 4));
             }
@@ -55,38 +67,23 @@ namespace Task5.Web.Controllers
         }
 
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Sales(OrderFilter model)
+        public ActionResult ApplyFilter(OrderFilter model)
         {
             if (!ModelState.IsValid)
             {
-                return PartialView();
+                return PartialView("Sales", null);
             }
-            try
-            {
-                var sales = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>(orderService.GetOrders());
-                var expression = model.ToExpression();
-                var predicate = expression.Compile();
-                if (model.ProductName != null)
-                {
-                    sales = sales.Where(x => predicate(x.ProductName, model.ProductName));
-                }
-                if (model.ClientName != null)
-                {
-                    sales = sales.Where(x => predicate(x.ClientName, model.ClientName));
-                }
-                if (model.Date != null)
-                {
-                    sales = sales.Where(x => x.Date == model.Date);
-                }
-                return PartialView(sales.ToPagedList(1, sales.Count() == 0 ? 1 : sales.Count()));
-            }
-            catch (Exception ex)
-            {
-                logger.Warn(ex.Message);
-                return View("Error");
-            }
+            Session["orderFilter"] = model;
+            return RedirectToAction("Sales");
         }
+
+        [HttpGet]
+        public ActionResult ClearFilter()
+        {
+            Session["orderFilter"] = null;
+            return RedirectToAction("Sales");
+        }
+
         [HttpGet]
         [Authorize(Roles = "admin")]
         public ActionResult Create(int? page)
@@ -211,6 +208,24 @@ namespace Task5.Web.Controllers
                 logger.Warn(ex.Message);
                 return View("Error");
             }
+        }
+        private IEnumerable<OrderViewModel> GetFilteredSales(IEnumerable<OrderViewModel> sales, OrderFilter filter)
+        {
+            var expression = filter.ToExpression();
+            var predicate = expression.Compile();
+            if (filter.ProductName != null)
+            {
+                sales = sales.Where(x => predicate(x.ProductName, filter.ProductName));
+            }
+            if (filter.ClientName != null)
+            {
+                sales = sales.Where(x => predicate(x.ClientName, filter.ClientName));
+            }
+            if (filter.Date != null)
+            {
+                sales = sales.Where(x => x.Date == filter.Date);
+            }
+            return sales;
         }
         protected override void Dispose(bool disposing)
         {

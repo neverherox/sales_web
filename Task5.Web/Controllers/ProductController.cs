@@ -32,8 +32,13 @@ namespace Task5.Web.Controllers
         [HttpGet]
         public ActionResult Index(int? page)
         {
+            ProductFilter filter = (ProductFilter)Session["productFilter"];
             ViewBag.CurrentPage = page ?? 1;
-            return View();
+            if (filter != null)
+            {
+                return View(filter);
+            }
+            return View(new ProductFilter());
         }
         [HttpGet]
         public ActionResult Products(int? page)
@@ -41,6 +46,11 @@ namespace Task5.Web.Controllers
             try
             {
                 var products = mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts());
+                ProductFilter filter = (ProductFilter)Session["productFilter"];
+                if (filter != null)
+                {
+                    products = GetFilteredProducts(products, filter);
+                }
                 ViewBag.CurrentPage = page;
                 return PartialView(products.ToPagedList(page ?? 1, 4));
             }
@@ -50,32 +60,19 @@ namespace Task5.Web.Controllers
                 return View("Error");
             }
         }
-
         [HttpPost]
-        [ValidateAntiForgeryToken]
-        public ActionResult Products(ProductFilter model)
+        public ActionResult ApplyFilter(ProductFilter model)
         {
-            try
-            {
-                var products = mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts());
-                var expression = model.ToExpression();
-                var predicate = expression.Compile();
-                if (model.Name != null)
-                {
-                    products = products.Where(x => predicate(x.Name, model.Name));
-                }
-                if (model.Price != 0)
-                {
-                    products = products.Where(x => x.Price == model.Price);
-                }
-                return PartialView(products.ToPagedList(1, products.Count() == 0 ? 1 : products.Count()));
-            }
-            catch (Exception ex)
-            {
-                logger.Warn(ex.Message);
-                return View("Error");
-            }
+            Session["productFilter"] = model;
+            return RedirectToAction("Products");
         }
+        [HttpGet]
+        public ActionResult ClearFilter()
+        {
+            Session["productFilter"] = null;
+            return RedirectToAction("Products");
+        }
+
         [HttpGet]
         [Authorize(Roles = "admin")]
         public ActionResult Create(int? page)
@@ -237,6 +234,20 @@ namespace Task5.Web.Controllers
             return Json(data.ToArray(), JsonRequestBehavior.AllowGet);
         }
 
+        private IEnumerable<ProductViewModel> GetFilteredProducts(IEnumerable<ProductViewModel> products, ProductFilter filter)
+        {
+            var expression = filter.ToExpression();
+            var predicate = expression.Compile();
+            if (filter.Name != null)
+            {
+                products = products.Where(x => predicate(x.Name, filter.Name));
+            }
+            if (filter.Price != null)
+            {
+                products = products.Where(x => x.Price == filter.Price);
+            }
+            return products;
+        }
         protected override void Dispose(bool disposing)
         {
             if (disposing && productService != null)
