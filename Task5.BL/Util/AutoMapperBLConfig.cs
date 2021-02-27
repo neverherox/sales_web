@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using AutoMapper.Extensions.ExpressionMapping;
-using System.Collections.Generic;
 using Task5.BL.DTO;
 using Task5.DAL.Entities;
 
@@ -21,10 +20,8 @@ namespace Task5.BL.Util
                     .ForMember("ProductId", opt => opt.MapFrom(x => x.Product.Id))
                     .ForMember("ClientId", opt => opt.MapFrom(x => x.Client.Id));
 
-                    cfg.CreateMap<ClientDTO, Client>();
-                    cfg.CreateMap<Client, ClientDTO>();
-                    cfg.CreateMap<ProductDTO, Product>();
-                    cfg.CreateMap<Product, ProductDTO>();
+                    cfg.CreateMap<ClientDTO, Client>().ReverseMap();
+                    cfg.CreateMap<ProductDTO, Product>().ReverseMap();
                     cfg.AddExpressionMapping();
                 }
             );

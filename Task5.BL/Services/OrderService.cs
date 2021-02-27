@@ -14,30 +14,30 @@ namespace Task5.BL.Services
 {
     public class OrderService : IOrderService
     {
-        private ISalesUnitOfWork uow;
-        private IMapper mapper;
-        private bool disposed = false;
+        private ISalesUnitOfWork _uow;
+        private IMapper _mapper;
+        private bool _disposed = false;
         public OrderService(ISalesUnitOfWork uow)
         {
-            this.uow = uow;
-            mapper = new Mapper(AutoMapperBLConfig.Configure());
+            _uow = uow;
+            _mapper = new Mapper(AutoMapperBLConfig.Configure());
         }
         public IEnumerable<OrderDTO> GetOrders()
         {
-            return uow.OrderRepository.Get().ProjectTo<OrderDTO>(AutoMapperBLConfig.Configure()).ToList();
+            return _uow.OrderRepository.Get().ProjectTo<OrderDTO>(AutoMapperBLConfig.Configure()).ToList();
         }
         public IEnumerable<OrderDTO> GetOrders(Expression<Func<OrderDTO, bool>> predicate)
         {
-            var newPredicate = mapper.Map<Expression<Func<OrderDTO, bool>>, Expression<Func<Order, bool>>>(predicate);
-            return uow.OrderRepository.Get()
+            var newPredicate = _mapper.Map<Expression<Func<OrderDTO, bool>>, Expression<Func<Order, bool>>>(predicate);
+            return _uow.OrderRepository.Get()
                                       .Where(newPredicate)
                                       .ProjectTo<OrderDTO>(AutoMapperBLConfig.Configure()).ToList();
             
         }
         public OrderDTO GetOrder(Expression<Func<OrderDTO, bool>> predicate)
         {
-            var newPredicate = mapper.Map<Expression<Func<OrderDTO, bool>>, Expression<Func<Order, bool>>>(predicate);
-            var orderDTO = mapper.Map<Order, OrderDTO>(uow.OrderRepository.Get(newPredicate));
+            var newPredicate = _mapper.Map<Expression<Func<OrderDTO, bool>>, Expression<Func<Order, bool>>>(predicate);
+            var orderDTO = _mapper.Map<Order, OrderDTO>(_uow.OrderRepository.Get(newPredicate));
             return orderDTO;
         }
         
@@ -49,36 +49,36 @@ namespace Task5.BL.Services
                 ClientId = orderDTO.ClientId,
                 ProductId = orderDTO.ProductId
             };
-            uow.OrderRepository.Add(order);
-            uow.SaveContext();
+            _uow.OrderRepository.Add(order);
+            _uow.SaveContext();
         }
         public void Update(OrderDTO orderDTO)
         {
-            var order = uow.OrderRepository.Get(x => x.Id == orderDTO.Id);
+            var order = _uow.OrderRepository.Get(x => x.Id == orderDTO.Id);
             order.ClientId = orderDTO.ClientId;
             order.ProductId = orderDTO.ProductId;
             order.Date = orderDTO.Date;
-            uow.OrderRepository.Update(order);
-            uow.SaveContext();
+            _uow.OrderRepository.Update(order);
+            _uow.SaveContext();
         }
 
         public void Remove(OrderDTO orderDTO)
         {
-            var order = uow.OrderRepository.Get(x => x.Id == orderDTO.Id);
-            uow.OrderRepository.Delete(order);
-            uow.SaveContext();
+            var order = _uow.OrderRepository.Get(x => x.Id == orderDTO.Id);
+            _uow.OrderRepository.Delete(order);
+            _uow.SaveContext();
         }
 
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
-                    uow.Dispose();
+                    _uow.Dispose();
                 }
             }
-            disposed = true;
+            _disposed = true;
         }
 
         public void Dispose()

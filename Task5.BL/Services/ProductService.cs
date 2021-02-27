@@ -14,54 +14,54 @@ namespace Task5.BL.Services
 {
     public class ProductService : IProductService
     {
-        private ISalesUnitOfWork uow;
-        private IMapper mapper;
-        private bool disposed = false;
+        private ISalesUnitOfWork _uow;
+        private IMapper _mapper;
+        private bool _disposed = false;
         public ProductService(ISalesUnitOfWork uow)
         {
-            this.uow = uow;
-            mapper = new Mapper(AutoMapperBLConfig.Configure());
+            _uow = uow;
+            _mapper = new Mapper(AutoMapperBLConfig.Configure());
         }
         public ProductDTO GetProduct(Expression<Func<ProductDTO, bool>> predicate)
         {
-            var newPredicate = mapper.Map<Expression<Func<ProductDTO, bool>>, Expression<Func<Product, bool>>>(predicate);
-            var product = mapper.Map<Product, ProductDTO>(uow.ProductRepository.Get(newPredicate));
+            var newPredicate = _mapper.Map<Expression<Func<ProductDTO, bool>>, Expression<Func<Product, bool>>>(predicate);
+            var product = _mapper.Map<Product, ProductDTO>(_uow.ProductRepository.Get(newPredicate));
             return product;
         }
         public IEnumerable<ProductDTO> GetProducts()
         {
-            return uow.ProductRepository.Get().ProjectTo<ProductDTO>(AutoMapperBLConfig.Configure()).ToList();
+            return _uow.ProductRepository.Get().ProjectTo<ProductDTO>(AutoMapperBLConfig.Configure()).ToList();
         }
         public void Create(ProductDTO productDTO)
         {
-            var product = mapper.Map<ProductDTO, Product>(productDTO);
-            uow.ProductRepository.Add(product);
-            uow.SaveContext();
+            var product = _mapper.Map<ProductDTO, Product>(productDTO);
+            _uow.ProductRepository.Add(product);
+            _uow.SaveContext();
         }
         public void Update(ProductDTO productDTO)
         {
-            var product = uow.ProductRepository.Get(x => x.Id == productDTO.Id);
+            var product = _uow.ProductRepository.Get(x => x.Id == productDTO.Id);
             product.Name = productDTO.Name;
             product.Price = productDTO.Price;
-            uow.ProductRepository.Update(product);
-            uow.SaveContext();
+            _uow.ProductRepository.Update(product);
+            _uow.SaveContext();
         }
         public void Remove(ProductDTO productDTO)
         {
-            var product = uow.ProductRepository.Get(x => x.Id == productDTO.Id);
-            uow.ProductRepository.Delete(product);
-            uow.SaveContext();
+            var product = _uow.ProductRepository.Get(x => x.Id == productDTO.Id);
+            _uow.ProductRepository.Delete(product);
+            _uow.SaveContext();
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
-                    uow.Dispose();
+                    _uow.Dispose();
                 }
             }
-            disposed = true;
+            _disposed = true;
         }
 
         public void Dispose()

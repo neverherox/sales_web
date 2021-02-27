@@ -14,19 +14,19 @@ using Task5.Web.Util;
 
 namespace Task5.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "user")]
     public class ClientController : Controller
     {
-        private IClientService clientService;
-        private IOrderService orderService;
-        private IMapper mapper;
-        private ILogger logger;
+        private IClientService _clientService;
+        private IOrderService _orderService;
+        private IMapper _mapper;
+        private ILogger _logger;
         public ClientController(IClientService clientService, IOrderService orderService, ILogger logger)
         {
-            this.clientService = clientService;
-            this.orderService = orderService;
-            this.logger = logger;
-            mapper = new Mapper(AutoMapperWebConfig.Configure());
+            _clientService = clientService;
+            _orderService = orderService;
+            _logger = logger;
+            _mapper = new Mapper(AutoMapperWebConfig.Configure());
         }
         [HttpGet]
         public ActionResult Index(int? page)
@@ -44,7 +44,7 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var clients = mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients());
+                var clients = _mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(_clientService.GetClients());
                 ClientFilter filter = (ClientFilter)Session["clientFilter"];
                 if (filter != null)
                 {
@@ -55,7 +55,7 @@ namespace Task5.Web.Controllers
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -86,7 +86,7 @@ namespace Task5.Web.Controllers
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -101,13 +101,13 @@ namespace Task5.Web.Controllers
             }
             try
             {
-                var clientDTO = mapper.Map<CreateClientViewModel, ClientDTO>(model);
-                clientService.Create(clientDTO);
+                var clientDTO = _mapper.Map<CreateClientViewModel, ClientDTO>(model);
+                _clientService.Create(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -117,7 +117,7 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var clientDTO = clientService.GetClient(x => x.Id == id);
+                var clientDTO = _clientService.GetClient(x => x.Id == id);
                 var editClient = new EditClientViewModel
                 {
                     Name = clientDTO.Name,
@@ -128,7 +128,7 @@ namespace Task5.Web.Controllers
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -143,15 +143,15 @@ namespace Task5.Web.Controllers
             }
             try
             {
-                var clientDTO = clientService.GetClient(x => x.Id == model.Id);
+                var clientDTO = _clientService.GetClient(x => x.Id == model.Id);
                 clientDTO.Name = model.Name;
                 clientDTO.PhoneNumber = model.PhoneNumber;
-                clientService.Update(clientDTO);
+                _clientService.Update(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -160,13 +160,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var client = mapper.Map<ClientDTO, ClientViewModel>(clientService.GetClient(x => x.Id == id));
+                var client = _mapper.Map<ClientDTO, ClientViewModel>(_clientService.GetClient(x => x.Id == id));
                 ViewBag.CurrentPage = page;
                 return View(client);
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -175,15 +175,15 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var orders = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>
-                                       (orderService.GetOrders(x => x.ClientId == id))
+                var orders = _mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>
+                                       (_orderService.GetOrders(x => x.ClientId == id))
                                        .ToPagedList(page ?? 1, 4);
                 ViewBag.ClientId = id;
                 return PartialView(orders);
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -193,13 +193,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var client = mapper.Map<ClientDTO, ClientViewModel>(clientService.GetClient(x => x.Id == id));
+                var client = _mapper.Map<ClientDTO, ClientViewModel>(_clientService.GetClient(x => x.Id == id));
                 ViewBag.CurrentPage = page;
                 return View(client);
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -210,13 +210,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var clientDTO = clientService.GetClient(x => x.Id == id);
-                clientService.Remove(clientDTO);
+                var clientDTO = _clientService.GetClient(x => x.Id == id);
+                _clientService.Remove(clientDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -224,14 +224,14 @@ namespace Task5.Web.Controllers
         [HttpGet]
         public JsonResult CheckClientName(string Name)
         {
-            var client = clientService.GetClient(x => x.Name == Name);
+            var client = _clientService.GetClient(x => x.Name == Name);
             var result = (client == null);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         [HttpGet]
         public JsonResult CheckClientPhoneNumber(string PhoneNumber)
         {
-            var client = clientService.GetClient(x => x.PhoneNumber == PhoneNumber);
+            var client = _clientService.GetClient(x => x.PhoneNumber == PhoneNumber);
             var result = (client == null);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
@@ -239,8 +239,8 @@ namespace Task5.Web.Controllers
         [HttpGet]
         public JsonResult GetChartData()
         {
-            var clients = clientService.GetClients();
-            var data = clients.Select(x => new object[] { x.Name, orderService.GetOrders(y => y.ClientId == x.Id).Count() }).ToArray();
+            var clients = _clientService.GetClients();
+            var data = clients.Select(x => new object[] { x.Name, _orderService.GetOrders(y => y.ClientId == x.Id).Count() }).ToArray();
             return Json(data.ToArray(), JsonRequestBehavior.AllowGet);
         }
 
@@ -260,12 +260,12 @@ namespace Task5.Web.Controllers
         }
         protected override void Dispose(bool disposing)
         {
-            if (disposing && clientService != null)
+            if (disposing && _clientService != null)
             {
-                clientService.Dispose();
-                orderService.Dispose();
-                orderService = null;
-                clientService = null;
+                _clientService.Dispose();
+                _orderService.Dispose();
+                _orderService = null;
+                _clientService = null;
             }
             base.Dispose(disposing);
         }

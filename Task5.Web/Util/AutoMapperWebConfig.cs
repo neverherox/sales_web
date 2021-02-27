@@ -15,10 +15,8 @@ namespace Task5.Web.Util
             (
                 cfg =>
                 {
-                    cfg.CreateMap<ProductDTO, ProductViewModel>();
-                    cfg.CreateMap<ProductViewModel, ProductDTO>();
-                    cfg.CreateMap<ClientDTO, ClientViewModel>();
-                    cfg.CreateMap<ClientViewModel, ClientDTO>();
+                    cfg.CreateMap<ProductDTO, ProductViewModel>().ReverseMap();
+                    cfg.CreateMap<ClientViewModel, ClientDTO>().ReverseMap();
                     cfg.CreateMap<OrderDTO, OrderViewModel>();
                     cfg.CreateMap<CreateOrderViewModel, OrderDTO>();
                     cfg.CreateMap<CreateClientViewModel, ClientDTO>();

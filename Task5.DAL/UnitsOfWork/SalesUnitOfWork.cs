@@ -9,38 +9,38 @@ namespace Task5.DAL.UnitsOfWork
 {
     public class SalesUnitOfWork : ISalesUnitOfWork
     {
-        private IGenericRepository<Client> clientRepository;
-        private IGenericRepository<Order> orderRepository;
-        private IGenericRepository<Product> productRepository;
-        private SalesContext salesContext;
-        private bool disposed = false;
+        private IGenericRepository<Client> _clientRepository;
+        private IGenericRepository<Order> _orderRepository;
+        private IGenericRepository<Product> _productRepository;
+        private SalesContext _salesContext;
+        private bool _disposed = false;
 
-        public IGenericRepository<Client> ClientRepository => clientRepository;
-        public IGenericRepository<Order> OrderRepository => orderRepository;
-        public IGenericRepository<Product> ProductRepository => productRepository;
+        public IGenericRepository<Client> ClientRepository => _clientRepository;
+        public IGenericRepository<Order> OrderRepository => _orderRepository;
+        public IGenericRepository<Product> ProductRepository => _productRepository;
 
         public SalesUnitOfWork()
         {
-            salesContext = new SalesContext();
-            salesContext.Database.CreateIfNotExists();
-            clientRepository = new GenericRepository<Client>(salesContext);
-            orderRepository = new GenericRepository<Order>(salesContext);
-            productRepository = new GenericRepository<Product>(salesContext);
+            _salesContext = new SalesContext();
+            _salesContext.Database.CreateIfNotExists();
+            _clientRepository = new GenericRepository<Client>(_salesContext);
+            _orderRepository = new GenericRepository<Order>(_salesContext);
+            _productRepository = new GenericRepository<Product>(_salesContext);
         }
         public void SaveContext()
         {
-            salesContext.SaveChanges();
+            _salesContext.SaveChanges();
         }
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposed)
+            if (!_disposed)
             {
                 if (disposing)
                 {
-                    salesContext.Dispose();
+                    _salesContext.Dispose();
                 }
             }
-            disposed = true;
+            _disposed = true;
         }
 
         public void Dispose()

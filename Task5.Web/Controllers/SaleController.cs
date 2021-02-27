@@ -16,21 +16,21 @@ using Task5.Web.Util;
 
 namespace Task5.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "user")]
     public class SaleController : Controller
     {
-        private IOrderService orderService;
-        private IClientService clientService;
-        private IProductService productService;
-        private ILogger logger;
-        private IMapper mapper;
+        private IOrderService _orderService;
+        private IClientService _clientService;
+        private IProductService _productService;
+        private ILogger _logger;
+        private IMapper _mapper;
         public SaleController(IOrderService orderService, IClientService clientService, IProductService productService, ILogger logger)
         {
-            this.orderService = orderService;
-            this.productService = productService;
-            this.clientService = clientService;
-            this.logger = logger;
-            mapper = new Mapper(AutoMapperWebConfig.Configure());
+            _orderService = orderService;
+            _productService = productService;
+            _clientService = clientService;
+            _logger = logger;
+            _mapper = new Mapper(AutoMapperWebConfig.Configure());
         }
 
         [HttpGet]
@@ -50,7 +50,7 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var sales = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>(orderService.GetOrders());
+                var sales = _mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>(_orderService.GetOrders());
                 OrderFilter filter = (OrderFilter)Session["orderFilter"];
                 if (filter != null)
                 {
@@ -61,7 +61,7 @@ namespace Task5.Web.Controllers
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -92,15 +92,15 @@ namespace Task5.Web.Controllers
             {
                 var createOrder = new CreateOrderViewModel
                 {
-                    Clients = new SelectList(mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients()), "Id", "Name"),
-                    Products = new SelectList(mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts()), "Id", "Name")
+                    Clients = new SelectList(_mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(_clientService.GetClients()), "Id", "Name"),
+                    Products = new SelectList(_mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(_productService.GetProducts()), "Id", "Name")
                 };
                 ViewBag.CurrentPage = page;
                 return View(createOrder);
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -111,19 +111,19 @@ namespace Task5.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Clients = new SelectList(mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients()), "Id", "Name");
-                model.Products = new SelectList(mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts()), "Id", "Name");
+                model.Clients = new SelectList(_mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(_clientService.GetClients()), "Id", "Name");
+                model.Products = new SelectList(_mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(_productService.GetProducts()), "Id", "Name");
                 return View(model);
             }
             try
             {
-                var orderDTO = mapper.Map<CreateOrderViewModel, OrderDTO>(model);
-                orderService.Create(orderDTO);
+                var orderDTO = _mapper.Map<CreateOrderViewModel, OrderDTO>(model);
+                _orderService.Create(orderDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -133,20 +133,20 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var orderDTO = orderService.GetOrder(x => x.Id == id);
+                var orderDTO = _orderService.GetOrder(x => x.Id == id);
                 var editOrder = new EditOrderViewModel
                 {
                     ClientId = orderDTO.ClientId,
                     ProductId = orderDTO.ProductId,
-                    Clients = new SelectList(mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients()), "Id", "Name"),
-                    Products = new SelectList(mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts()), "Id", "Name")
+                    Clients = new SelectList(_mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(_clientService.GetClients()), "Id", "Name"),
+                    Products = new SelectList(_mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(_productService.GetProducts()), "Id", "Name")
                 };
                 ViewBag.CurrentPage = page;
                 return View(editOrder);
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -157,22 +157,22 @@ namespace Task5.Web.Controllers
         {
             if (!ModelState.IsValid)
             {
-                model.Clients = new SelectList(mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(clientService.GetClients()), "Id", "Name");
-                model.Products = new SelectList(mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts()), "Id", "Name");
+                model.Clients = new SelectList(_mapper.Map<IEnumerable<ClientDTO>, IEnumerable<ClientViewModel>>(_clientService.GetClients()), "Id", "Name");
+                model.Products = new SelectList(_mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(_productService.GetProducts()), "Id", "Name");
                 return View(model);
             }
             try
             {
-                var orderDTO = orderService.GetOrder(x => x.Id == model.Id);
+                var orderDTO = _orderService.GetOrder(x => x.Id == model.Id);
                 orderDTO.ClientId = model.ClientId;
                 orderDTO.ProductId = model.ProductId;
                 orderDTO.Date = model.Date;
-                orderService.Update(orderDTO);
+                _orderService.Update(orderDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -182,13 +182,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var order = mapper.Map<OrderDTO, OrderViewModel>(orderService.GetOrder(x => x.Id == id));
+                var order = _mapper.Map<OrderDTO, OrderViewModel>(_orderService.GetOrder(x => x.Id == id));
                 ViewBag.CurrentPage = page;
                 return View(order);
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -199,13 +199,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var orderDTO = orderService.GetOrder(x => x.Id == id);
-                orderService.Remove(orderDTO);
+                var orderDTO = _orderService.GetOrder(x => x.Id == id);
+                _orderService.Remove(orderDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -229,14 +229,14 @@ namespace Task5.Web.Controllers
         }
         protected override void Dispose(bool disposing)
         {
-            if (disposing && orderService != null)
+            if (disposing && _orderService != null)
             {
-                orderService.Dispose();
-                clientService.Dispose();
-                productService.Dispose();
-                clientService = null;
-                productService = null;
-                orderService = null;
+                _orderService.Dispose();
+                _clientService.Dispose();
+                _productService.Dispose();
+                _clientService = null;
+                _productService = null;
+                _orderService = null;
             }
             base.Dispose(disposing);
         }

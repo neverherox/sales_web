@@ -14,20 +14,20 @@ using Task5.Web.Util;
 
 namespace Task5.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "user")]
     public class ProductController : Controller
     {
-        private IProductService productService;
-        private IOrderService orderService;
-        private IMapper mapper;
-        private ILogger logger;
+        private IProductService _productService;
+        private IOrderService _orderService;
+        private IMapper _mapper;
+        private ILogger _logger;
 
         public ProductController(IProductService productService, IOrderService orderService, ILogger logger)
         {
-            this.productService = productService;
-            this.orderService = orderService;
-            this.logger = logger;
-            mapper = new Mapper(AutoMapperWebConfig.Configure());
+            _productService = productService;
+            _orderService = orderService;
+            _logger = logger;
+            _mapper = new Mapper(AutoMapperWebConfig.Configure());
         }
         [HttpGet]
         public ActionResult Index(int? page)
@@ -45,7 +45,7 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var products = mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(productService.GetProducts());
+                var products = _mapper.Map<IEnumerable<ProductDTO>, IEnumerable<ProductViewModel>>(_productService.GetProducts());
                 ProductFilter filter = (ProductFilter)Session["productFilter"];
                 if (filter != null)
                 {
@@ -56,7 +56,7 @@ namespace Task5.Web.Controllers
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -85,7 +85,7 @@ namespace Task5.Web.Controllers
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -100,13 +100,13 @@ namespace Task5.Web.Controllers
             }
             try
             {
-                var productDTO = mapper.Map<CreateProductViewModel, ProductDTO>(model);
-                productService.Create(productDTO);
+                var productDTO = _mapper.Map<CreateProductViewModel, ProductDTO>(model);
+                _productService.Create(productDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -116,7 +116,7 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var productDTO = productService.GetProduct(x => x.Id == id);
+                var productDTO = _productService.GetProduct(x => x.Id == id);
                 var editProduct = new EditProductViewModel
                 {
                     Name = productDTO.Name,
@@ -127,7 +127,7 @@ namespace Task5.Web.Controllers
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -142,15 +142,15 @@ namespace Task5.Web.Controllers
             }
             try
             {
-                var productDTO = productService.GetProduct(x => x.Id == model.Id);
+                var productDTO = _productService.GetProduct(x => x.Id == model.Id);
                 productDTO.Name = model.Name;
                 productDTO.Price = model.Price;
-                productService.Update(productDTO);
+                _productService.Update(productDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch (Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -160,13 +160,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var product = mapper.Map<ProductDTO, ProductViewModel>(productService.GetProduct(x => x.Id == id));
+                var product = _mapper.Map<ProductDTO, ProductViewModel>(_productService.GetProduct(x => x.Id == id));
                 ViewBag.CurrentPage = page;
                 return View(product);
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -177,8 +177,8 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var productDTO = productService.GetProduct(x => x.Id == id);
-                productService.Remove(productDTO);
+                var productDTO = _productService.GetProduct(x => x.Id == id);
+                _productService.Remove(productDTO);
                 return RedirectToAction("Index", new { page = page });
             }
             catch
@@ -191,13 +191,13 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var product = mapper.Map<ProductDTO, ProductViewModel>(productService.GetProduct(x => x.Id == id));
+                var product = _mapper.Map<ProductDTO, ProductViewModel>(_productService.GetProduct(x => x.Id == id));
                 ViewBag.CurrentPage = page;
                 return View(product);
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -206,15 +206,15 @@ namespace Task5.Web.Controllers
         {
             try
             {
-                var orders = mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>
-                                       (orderService.GetOrders(x => x.ProductId == id))
+                var orders = _mapper.Map<IEnumerable<OrderDTO>, IEnumerable<OrderViewModel>>
+                                       (_orderService.GetOrders(x => x.ProductId == id))
                                        .ToPagedList(page ?? 1, 4);
                 ViewBag.ProductId = id;
                 return PartialView(orders);
             }
             catch(Exception ex)
             {
-                logger.Warn(ex.Message);
+                _logger.Warn(ex.Message);
                 return View("Error");
             }
         }
@@ -222,15 +222,15 @@ namespace Task5.Web.Controllers
         [HttpGet]
         public JsonResult CheckProductName(string Name)
         {
-            var product = productService.GetProduct(x => x.Name == Name);
+            var product = _productService.GetProduct(x => x.Name == Name);
             var result = (product == null);
             return Json(result, JsonRequestBehavior.AllowGet);
         }
         [HttpGet]
         public JsonResult GetChartData()
         {
-            var products = productService.GetProducts();
-            var data = products.Select(x => new object[] { x.Name, orderService.GetOrders(y => y.ProductId == x.Id).Count() }).ToArray();
+            var products = _productService.GetProducts();
+            var data = products.Select(x => new object[] { x.Name, _orderService.GetOrders(y => y.ProductId == x.Id).Count() }).ToArray();
             return Json(data.ToArray(), JsonRequestBehavior.AllowGet);
         }
 
@@ -250,12 +250,12 @@ namespace Task5.Web.Controllers
         }
         protected override void Dispose(bool disposing)
         {
-            if (disposing && productService != null)
+            if (disposing && _productService != null)
             {
-                productService.Dispose();
-                orderService.Dispose();
-                orderService = null;
-                productService = null;
+                _productService.Dispose();
+                _orderService.Dispose();
+                _orderService = null;
+                _productService = null;
             }
             base.Dispose(disposing);
         }
