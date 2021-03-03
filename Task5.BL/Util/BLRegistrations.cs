@@ -1,4 +1,5 @@
 ﻿using Ninject.Modules;
+using Ninject.Web.Common;
 using Task5.DAL.UnitsOfWork;
 using Task5.DAL.UnitsOfWork.Contracts;
 
@@ -8,7 +9,7 @@ namespace Task5.BL.Util
     {
         public override void Load()
         {
-            Bind<ISalesUnitOfWork>().To<SalesUnitOfWork>();
+            Bind<ISalesUnitOfWork>().To<SalesUnitOfWork>().InRequestScope();
         }
     }
 }

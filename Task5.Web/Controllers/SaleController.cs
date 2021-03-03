@@ -227,18 +227,5 @@ namespace Task5.Web.Controllers
             }
             return sales;
         }
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing && _orderService != null)
-            {
-                _orderService.Dispose();
-                _clientService.Dispose();
-                _productService.Dispose();
-                _clientService = null;
-                _productService = null;
-                _orderService = null;
-            }
-            base.Dispose(disposing);
-        }
     }
 }

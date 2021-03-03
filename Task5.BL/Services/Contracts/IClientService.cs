@@ -5,7 +5,7 @@ using Task5.BL.DTO;
 
 namespace Task5.BL.Services.Contracts
 {
-    public interface IClientService : IDisposable
+    public interface IClientService
     {
         ClientDTO GetClient(Expression<Func<ClientDTO, bool>> predicate);
         IEnumerable<ClientDTO> GetClients();

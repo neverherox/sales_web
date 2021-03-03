@@ -68,28 +68,5 @@ namespace Task5.BL.Services
             _uow.OrderRepository.Delete(order);
             _uow.SaveContext();
         }
-
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    _uow.Dispose();
-                }
-            }
-            _disposed = true;
-        }
-
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        ~OrderService()
-        {
-            Dispose(false);
-        }
     }
 }

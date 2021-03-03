@@ -5,7 +5,7 @@ using Task5.BL.DTO;
 
 namespace Task5.BL.Services.Contracts
 {
-    public interface IOrderService : IDisposable
+    public interface IOrderService
     {
         IEnumerable<OrderDTO> GetOrders();
         IEnumerable<OrderDTO> GetOrders(Expression<Func<OrderDTO, bool>> predicate);

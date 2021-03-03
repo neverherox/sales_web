@@ -23,7 +23,11 @@ namespace Task5.DAL.Repositories
         }
         public TEntity Get(Expression<Func<TEntity, bool>> predicate)
         {
-            return entitySet.FirstOrDefault(predicate);
+            if (predicate != null)
+            {
+                return entitySet.FirstOrDefault(predicate);
+            }
+            return null;
         }
         public void Add(TEntity entity)
         {
